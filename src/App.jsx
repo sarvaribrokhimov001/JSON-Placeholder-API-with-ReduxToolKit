@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import { useDispatch, useSelector } from "react-redux";
-import {fetchUsers, postUsers} from "./users/UsersSlice";
+import {fetchUsers, postUsers , deleteUsers, editUsers,} from "./users/UsersSlice";
 
 const App = () => {
   const users = useSelector((state) => state.users);
   const dispatch = useDispatch();
   const [loading , setLoading] = useState(true);
   const [addBtn , setAddBtn] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
   console.log(users);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ const App = () => {
   if (users.Error) 
     return <h2 className="text-center text-red-600 text-shadow-red-600 text-[50px]"> {users.Error} </h2>;
 
-  const handleAdd = () => {
+const handleAdd = () => {
   const newUser = {
     id: Date.now(),
     name: addBtn.charAt(0).toUpperCase() + addBtn.slice(1).toLowerCase(),
@@ -41,6 +42,18 @@ const App = () => {
 
   dispatch(postUsers(newUser));
   setAddBtn("");
+};
+
+const handleDelete = (id) => {
+  dispatch(deleteUsers(id));
+};
+
+const handleEdit = (user) => {
+  const updatedUser = {
+    ...user,
+    name: prompt("Enter new username", user.name),
+  };
+  dispatch(editUsers(updatedUser));
 };
 
   return (
@@ -64,7 +77,7 @@ const App = () => {
       <div>
          <table className="w-full border-collapse text-left text-sm text-gray-300">
             <thead className="bg-gray-800/50 text-xs uppercase tracking-wider text-gray-400">
-                <tr className="transition-colors hover:bg-gray-800/30">
+                <tr className="transition-colors hover:bg-gray-800/30 text-center">
                     <th className="px-6 py-4 font-semibold"> T/r </th>
                     <th className="px-6 py-4 font-semibold"> Username </th>
                     <th className="px-6 py-4 font-semibold"> PhoneNumber </th>
@@ -86,17 +99,52 @@ const App = () => {
                     <td className="whitespace-nowrap px-6 py-4 text-gray-300"> {address?.street} </td>
                     <td className="whitespace-nowrap px-6 py-4 text-gray-300"> {company?.name} </td>
                     <td className="whitespace-nowrap px-6 py-4 text-gray-300">
-                        <button className="w-[100px] h-[35px] rounded-[20px] bg-black text-green-600 font-bold border-[5px] text-[17px] border-green-600
+                      <button onClick={() => {
+                        setSelectedUser({
+                          id,
+                          name,
+                          phone,
+                          email,
+                          address,
+                          company,
+                        })
+                        }} className="w-[100px] h-[35px] rounded-[20px] bg-black text-green-600 font-bold border-[5px] text-[17px] border-green-600
                          hover:bg-green-600 hover:text-white hover: border-[5px] hover:border-white"> View </button>
-                        <button className="w-[100px] h-[35px] rounded-[20px] bg-black text-yellow-400 font-bold border-[5px] text-[17px] border-yellow-400
+                      <button onClick={() => {
+                        handleEdit({
+                          id,
+                          name,
+                          phone,
+                          email,
+                          address,
+                          company,
+                        })
+                        }} className="w-[100px] h-[35px] rounded-[20px] bg-black text-yellow-400 font-bold border-[5px] text-[17px] border-yellow-400
                          hover:bg-yellow-400 hover:text-white hover:border-[5px] hover:border-white"> Edit </button>
-                        <button className="w-[100px] h-[35px] rounded-[20px] bg-black text-red-600 font-bold border-[5px] text-[17px] border-red-600
+                      <button onClick={() => {
+                        handleDelete(id);
+                        }} className="w-[100px] h-[35px] rounded-[20px] bg-black text-red-600 font-bold border-[5px] text-[17px] border-red-600
                          hover:bg-red-600 hover:text-white hover:border-[5px] hover:border-white"> Delete </button>
                     </td>
                 </tr>
         ))}
            </tbody>
         </table>
+
+        {selectedUser && (
+          <div className="fixed inset-0 bg-black/70 flex justify-center items-center">
+            <div className="bg-black p-6 rounded-xl text-white w-[400px] border-4 border-white">
+              <h2 className="text-[35px] font-bold mb-5 text-center"> User Info </h2>
+                <p className="text-cyan-600 font-bold text-[22px]"> <span className="font-bold text-[22px] text-white"> Name: </span> {selectedUser.name} </p>
+                <p className="text-cyan-600 font-bold text-[22px]"> <span className="font-bold text-[22px] text-white"> Phone: </span> {selectedUser.phone} </p>
+                <p className="text-cyan-600 font-bold text-[22px]"> <span className="font-bold text-[22px] text-white"> Email: </span> {selectedUser.email} </p>
+                <p className="text-cyan-600 font-bold text-[22px]"> <span className="font-bold text-[22px] text-white"> City: </span> {selectedUser.address?.city} </p>
+                <p className="text-cyan-600 font-bold text-[22px]"> <span className="font-bold text-[22px] text-white"> Street: </span> {selectedUser.address?.street} </p>
+                <p className="text-cyan-600 font-bold text-[22px]"> <span className="font-bold text-[22px] text-white"> Company: </span> {selectedUser.company?.name} </p>
+              <button onClick={() => setSelectedUser(null)} className="mt-5 bg-red-600 border-3 border-white text-white px-5 py-2 rounded-lg font-bold hover:bg-black hover:border-3 hover:border-red-600 hover:text-red-600"> Close </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
